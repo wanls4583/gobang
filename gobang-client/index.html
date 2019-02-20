@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>五子棋</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimal-ui" />
+        <script>
+            (function(){
+                var userScalable = ''
+                function flex(){
+                    var metaEl = document.querySelector('meta[name="viewport"]');
+                    var width = 750;
+                    var dpr = window.devicePixelRatio;
+                    var phoneScale = parseInt(window.screen.width)/width;
+                    var content = '';
+                    if (window.screen.width > 540) {
+                        var tmp = width * (window.screen.width/540);
+                        phoneScale = parseInt(window.screen.width)/tmp;
+                    }
+                    if(location.href.indexOf('eruda')==-1){
+                        userScalable = ', maximum-scale = ' + phoneScale + ', user-scalable=no';
+                    }
+                    content = 'width = 750, minimum-scale = ' + phoneScale + userScalable;
+                    if(metaEl){
+                        metaEl.setAttribute('content',content)
+                    }else{
+                        document.write('<meta name="viewport" content="'+content+'"/>');
+                    }
+                }
+                flex();
+                window.onresize = flex;
+            })();
+            if(location.href.indexOf('eruda')!=-1){
+                var src = '//cdn.bootcss.com/eruda/1.3.0/eruda.min.js';
+                document.write('<scr' + 'ipt src="' + src + '"></scr' + 'ipt>');
+                document.write('<scr' + 'ipt>eruda.init();</scr' + 'ipt>');
+            }
+        </script>
+    </head>
+    <body>
+        <div id="app"></div>
+    </body>
+</html>
