@@ -11,6 +11,12 @@
         </div>
       </div>
     </div>
+    <Dialog v-if="showPop" width="500px" height="400px">
+      <div class="win_pop_wrap">
+        <div class="w_title">{{result}}</div>
+        <div class="restart" @click="_restart">重来</div>
+      </div>
+    </Dialog>
   </div>
 </template>
 <script type="text/javascript">
@@ -27,14 +33,20 @@ export default {
       socket: null,
       color: '',
       showPop: false,
-      roomid: ''
+      roomid: '',
+      showPop: false,
+      result: ''
     }
   },
   created() {
     this.socket = this.$route.params.socket;
     this.color = this.$route.params.color;
     this.roomid = this.$route.params.roomid;
-    this.socket && this._bindSocketEvent();
+    if(this.socket) {
+      this._bindSocketEvent();
+    } else {
+      this.$router.back(-1);
+    }
   },
   methods: {
     _bindSocketEvent() {
@@ -45,11 +57,14 @@ export default {
           content: '对方离开了房间'
         });
         this.active = false;
+        setTimeout(()=>{
+          this.$router.back(-1);
+        },1000);
       });
       socket.on('start', () => {
-        console.log('对方加入房间');
+        console.log('开始');
         this.$toast({
-          content: '对方加入房间'
+          content: '开始'
         });
         this.active = true;
       });
@@ -67,18 +82,21 @@ export default {
       //胜利
       socket.on('win', (data) => {
         console.log('胜利')
-        this.$toast({
-          content: '胜利'
-        });
         this.active = false;
+        this.showPop = true;
+        this.result = '胜利!';
       });
       //失败
       socket.on('lose', (data) => {
         console.log('失败')
-        this.$toast({
-          content: '失败'
-        });
         this.active = false;
+        this.showPop = true;
+        this.result = '失败!';
+      });
+      //重来确认
+      socket.on('confirm-restart', (data) => {
+        this.chessArr = [];
+        this.showPop = false;
       });
     },
     _clickBoard(e) {
@@ -116,6 +134,9 @@ export default {
     _cancelStep() {
       this.chessArr.splice(this.chessArr.length - 1, 1);
       this.active = true;
+    },
+    _restart() {
+      this.socket.emit('restart', { roomid: this.roomid });
     }
   }
 }
@@ -125,9 +146,13 @@ export default {
 $chessWidth:48px;
 .home_w {
   height: 100%;
+  min-height: 800px;
   background: url(~@/assets/bg.jpg);
   background-size: 100% 100%;
   overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   .board_w {
     position: relative;
     display: flex;
@@ -135,7 +160,6 @@ $chessWidth:48px;
     width: 14*$chessWidth;
     height: 14*$chessWidth;
     border: 2px solid #333;
-    margin: $chessWidth auto 0;
     .cell_w {
       width: $chessWidth;
       height: $chessWidth;
@@ -191,62 +215,27 @@ $chessWidth:48px;
   background: radial-gradient(10px 10px at 15px 15px, #fff, #333);
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
 }
-.btn_w {
-  width: 14*$chessWidth;
-  margin: 0 auto;
-  .btn {
-    height: 80px;
-    margin-top: 30px;
-    line-height: 80px;
+.win_pop_wrap {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 40px;
+  .w_title {
+    margin: 0 auto 40px;
+    color: #333;
+    font-size: 40px;
+    font-weight: bold;
     text-align: center;
-    font-size: 30px;
-    border-radius: 4px;
+  }
+  .restart {
+    width: 300px;
+    height: 60px;
+    margin: auto;
+    line-height: 60px;
+    text-align: center;
     background-color: #4A90E2;
+    font-size: 24px;
     color: #fff;
   }
 }
-.pop_wrap {
-  background-color: #fff;
-  border-radius: 8px;
-  color: #333;
-  .title {
-    padding: 30px;
-    font-size: 30px;
-    line-height: 30px;
-    text-align: center;
-  }
-  .input_w {
-    width: 450px;
-    height: 60px;
-    margin: 0 auto;
-    border: 1px solid #999;
-    input {
-      border-style: none;
-      outline-style: none;
-      width: 100%;
-      height: 100%;
-      padding: 0 10px;
-      box-sizing: border-box;
-      font-size: 30px;
-    }
-  }
-  .btn_r_w {
-    display: flex;
-    justify-content: space-between;
-    border-top: 1px solid #999;
-    height: 80px;
-    margin-top: 50px;
-    .btn {
-      width: 50%;
-      height: 100%;
-      box-sizing: border-box;
-      font-size: 30px;
-      line-height: 80px;
-      text-align: center;
-      &:first-child {
-        border-right: 1px solid #999;
-      }
-    }
-  }
-}
+
 </style>

@@ -10,7 +10,6 @@ const PRE_FIX = 'room_';
 module.exports = {
     init(server) {
         var io = require('socket.io')(server);
-        this.bang = new Bang();
         this.rooms = [];
         io.on('connection', (socket) => {
             console.log('connection');
@@ -18,8 +17,10 @@ module.exports = {
             this.joinRoomEvent(socket);
             this.leaveRoomEvent(socket);
             this.moveEvent(socket);
+            this.restartEvent(socket);
         });
     },
+    //创建对局
     creatRoomEvent(socket) {
         socket.on('create-room', (data) => {
             console.log('create-room', data);
@@ -30,7 +31,8 @@ module.exports = {
                     creater: {
                         user: data.user || uuidV1(),
                         socket: socket
-                    }
+                    },
+                    bang: new Bang()
                 }
                 socket.emit('confirm-create', { color: 'black' });
             } else {
@@ -39,6 +41,7 @@ module.exports = {
             }
         });
     },
+    //加入对局
     joinRoomEvent(socket) {
         socket.on('join-room', (data) => {
             console.log('join-room', data);
@@ -58,6 +61,7 @@ module.exports = {
             }
         })
     },
+    //离开
     leaveRoomEvent(socket) {
         socket.on('disconnect', () => {
             console.log('disconnect');
@@ -79,6 +83,7 @@ module.exports = {
             }
         });
     },
+    //落子
     moveEvent(socket) {
         socket.on('move', (data) => {
             console.log('move', data);
@@ -95,7 +100,7 @@ module.exports = {
                 console.log('emit ready1');
                 room.joinner.socket.emit('ready', data); //通知对方准备落子
                 room.now = room.joinner;
-                if (this.bang.step(data, true)) { //创建者方胜利
+                if (room.bang.step(data, true)) { //创建者方胜利
                     console.log('emit creater win');
                     room.creater.socket.emit('win');
                     room.joinner.socket.emit('lose');
@@ -104,10 +109,32 @@ module.exports = {
                 console.log('emit ready2');
                 room.creater.socket.emit('ready', data); //通知对方准备落子
                 room.now = room.creater;
-                if (this.bang.step(data)) { //加入者方胜利
+                if (room.bang.step(data)) { //加入者方胜利
                     console.log('emit joiner win');
                     room.joinner.socket.emit('win');
                     room.creater.socket.emit('lose');
+                }
+            }
+        });
+    },
+    //重新开始
+    restartEvent(socket) {
+        socket.on('restart',(data)=>{
+            console.log('move', data);
+            var roomid = data.roomid;
+            var room = this.rooms[PRE_FIX + roomid];
+            socket.emit('confirm-restart');
+            if(socket == room.creater.socket) { //创建者准备就绪
+                room.bang.restart(true);
+                if(room.bang.joinerReady) {
+                    room.now = room.creater;
+                    room.creater.socket.emit('start');
+                }
+            } else { //加入准备就绪
+                room.bang.restart();
+                if(room.bang.createrReady) {
+                    room.now = room.creater;
+                    room.creater.socket.emit('start');
                 }
             }
         });

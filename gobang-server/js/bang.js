@@ -1,6 +1,9 @@
 module.exports = class Bang{
     constructor(server) {
-        this.creater = [];
+        this.init();
+    }
+    init() {
+       this.creater = [];
         this.joiner = [];
         for (var i = 0; i < 15; i++) {
             this.creater[i] = [];
@@ -9,6 +12,15 @@ module.exports = class Bang{
                 this.creater[i][j] = false;
                 this.joiner[i][j] = false;
             }
+        } 
+    }
+    restart(ifCreater) {
+        if(ifCreater) {
+            this.init();
+            this.createrReady = true;
+        } else {
+            this.init();
+            this.joinerReady = true;
         }
     }
     step(data, ifCreater) {
@@ -17,7 +29,12 @@ module.exports = class Bang{
         } else {
             this.joiner[data.y][data.x] = true;
         }
-        return this.check(data, ifCreater);
+        var result = this.check(data, ifCreater);
+        if(result) {
+            this.createrReady = false;
+            this.joinerReady = false;
+        }
+        return result;
     }
     //检查是否已经5珠成线
     check(data, ifCreater) {

@@ -38,11 +38,20 @@ export default {
     }
   },
   created() {
-    this.socket = io('http://localhost:3000');
-    this.socket.on('connect', () => {
-      console.log('连接成功');
+    
+  },
+  beforeRouteEnter (to, from, next) {
+    next((vm)=>{
+      if(vm.socket && vm.socket.connected) {
+        vm.socket.disconnect();
+      }
+      vm.socket = io('http://localhost:3000');
+      vm.socket.on('connect', () => {
+        console.log('连接成功');
+      });
+      vm._bindSocketEvent();
     });
-    this._bindSocketEvent();
+    next();
   },
   methods: {
     _bindSocketEvent() {
