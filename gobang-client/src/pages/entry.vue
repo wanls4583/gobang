@@ -62,7 +62,7 @@ export default {
         this.$toast({
           content: '创建成功'
         });
-        this.$router.push({ name: 'Home', params: { socket: socket, color: data.color, roomid: this.roomid } });
+        this.$router.push({ name: 'Home', params: { socket: socket, color: data.color, overtime: data.overtime, roomid: this.roomid } });
       });
       //加入房间成功
       socket.on('confirm-join', (data) => {
@@ -70,7 +70,7 @@ export default {
         this.$toast({
           content: '加入房间'
         });
-        this.$router.push({ name: 'Home', params: { socket: socket, color: data.color, roomid: this.roomid } });
+        this.$router.push({ name: 'Home', params: { socket: socket, color: data.color, overtime: data.overtime, roomid: this.roomid } });
       });
     },
     _createRoom() {

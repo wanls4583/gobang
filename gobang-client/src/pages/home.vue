@@ -1,5 +1,15 @@
 <template>
   <div class="home_w">
+    <div class="timer_w">
+      <div class="left_w">
+        <div class="icon">{{color=='black'?'我方':'对方'}}</div>
+        <div class="timer">{{time1}}</div>
+      </div>
+      <div class="right_w">
+        <div class="icon white">{{color=='white'?'我方':'对方'}}</div>
+        <div class="timer white">{{time2}}</div>
+      </div>
+    </div>
     <div class="board_w" @click="_clickBoard" ref="board">
       <div class="cell_w" v-for="n in 14*14"></div>
       <div class="chess_w" v-for="chess in chessArr" :style="{top:48*(chess.y-1)-24+'px',left:48*(chess.x-1)-24+'px'}">
@@ -35,14 +45,17 @@ export default {
       showPop: false,
       roomid: '',
       showPop: false,
-      result: ''
+      result: '',
+      time1: 0,
+      time2: 0
     }
   },
   created() {
     this.socket = this.$route.params.socket;
     this.color = this.$route.params.color;
     this.roomid = this.$route.params.roomid;
-    if(this.socket) {
+    this.overtime = Number(this.$route.params.overtime);
+    if (this.socket) {
       this._bindSocketEvent();
     } else {
       this.$router.back(-1);
@@ -57,22 +70,28 @@ export default {
           content: '对方离开了房间'
         });
         this.active = false;
-        setTimeout(()=>{
+        setTimeout(() => {
           this.$router.back(-1);
-        },1000);
+        }, 1000);
       });
-      socket.on('start', () => {
+      socket.on('start', (data) => {
         console.log('开始');
         this.$toast({
           content: '开始'
         });
         this.active = true;
+        this._startTimer(this.color);
       });
       //对方落子完成
       socket.on('ready', (data) => {
         console.log('ready');
         this.chessArr.push(data);
         this.active = true;
+        this._startTimer(this.color);
+      });
+      //计时器
+      socket.on('time', (data)=>{
+        this._startTimer(data.color);
       });
       //落子确认
       socket.on('confirm-move', () => {
@@ -85,6 +104,9 @@ export default {
         this.active = false;
         this.showPop = true;
         this.result = '胜利!';
+        this.time1 = 0;
+        this.time2 = 0;
+        this._endTimer();
       });
       //失败
       socket.on('lose', (data) => {
@@ -92,6 +114,9 @@ export default {
         this.active = false;
         this.showPop = true;
         this.result = '失败!';
+        this.time1 = 0;
+        this.time2 = 0;
+        this._endTimer();
       });
       //重来确认
       socket.on('confirm-restart', (data) => {
@@ -137,6 +162,26 @@ export default {
     },
     _restart() {
       this.socket.emit('restart', { roomid: this.roomid });
+    },
+    _startTimer(color) {
+      clearTimeout(this.timer);
+      if (color == 'black') {
+        this.time1 = this.overtime;
+        this.time2 = 0;
+      } else {
+        this.time2 = this.overtime;
+        this.time1 = 0;
+      }
+      this.timer = setInterval(() => {
+        if (color == 'black') {
+          this.time1 > 0 && --this.time1;
+        } else {
+          this.time2 > 0 && --this.time2;
+        }
+      }, 1000);
+    },
+    _endTimer() {
+      clearTimeout(this.timer);
     }
   }
 }
@@ -146,13 +191,52 @@ export default {
 $chessWidth:48px;
 .home_w {
   height: 100%;
-  min-height: 800px;
+  min-height: 850px;
   background: url(~@/assets/bg.jpg);
   background-size: 100% 100%;
   overflow: auto;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  .timer_w {
+    width: 14*$chessWidth;
+    height: 140px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    .left_w,
+    .right_w {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #000;
+      line-height: 100px;
+      text-align: center;
+      font-size: 36px;
+      color: #fff;
+      font-weight: bold;
+      &.white {
+        color: #000;
+        background-color: #fff;
+      }
+    }
+    .timer {
+      line-height: 60px;
+      color: #333;
+      font-size: 40px;
+      font-weight: bold;
+      &.white {
+        color: #fff;
+      }
+    }
+  }
   .board_w {
     position: relative;
     display: flex;
