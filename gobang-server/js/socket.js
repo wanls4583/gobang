@@ -38,7 +38,7 @@ module.exports = {
                 socket.emit('confirm-create', { color: 'black', overtime: this.overtime });
             } else {
                 socket.emit('error', { code: HAS_EXIST_ROOM });
-                socket.disconnect();
+                // socket.disconnect();
             }
         });
     },
@@ -60,7 +60,7 @@ module.exports = {
                 this.startTimer(room);
             } else {
                 socket.emit('error', { code: NOT_EXIST_ROOM });
-                socket.disconnect();
+                // socket.disconnect();
             }
         })
     },
