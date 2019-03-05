@@ -40,23 +40,24 @@ app.use(function(err, req, res, next) {
     res.render('error');
 });
 
-app.engine('md', function(path, options, fn) {
-    console.log(path);
-    fs.readFile(path, 'utf8', function(err, str) {
-        if (err) return fn(err);
-        var converter = new showdown.Converter();
-        var hljcss = '<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/default.min.css">';
-        var hljjs = '<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>'; 
-        str = converter.makeHtml(str)
-        str = `<head>${hljcss}</head>` + str;
-        str += hljjs;
-        str += `<script>
-			document.querySelectorAll('pre code').forEach((block) => {
-			    hljs.highlightBlock(block);
-			});
-		</script>`
-        fn(null, str);
-    });
-});
+// 自定义模板解析引擎
+// app.engine('md', function(path, options, fn) {
+//     console.log(path);
+//     fs.readFile(path, 'utf8', function(err, str) {
+//         if (err) return fn(err);
+//         var converter = new showdown.Converter();
+//         var hljcss = '<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/default.min.css">';
+//         var hljjs = '<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>'; 
+//         str = converter.makeHtml(str)
+//         str = `<head>${hljcss}</head>` + str;
+//         str += hljjs;
+//         str += `<script>
+// 			document.querySelectorAll('pre code').forEach((block) => {
+// 			    hljs.highlightBlock(block);
+// 			});
+// 		</script>`
+//         fn(null, str);
+//     });
+// });
 
 module.exports = app;

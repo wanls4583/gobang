@@ -45,7 +45,8 @@ export default {
       if(vm.socket && vm.socket.connected) {
         vm.socket.disconnect();
       }
-      vm.socket = io('http://vultr.lisong.hn.cn:3000');
+      //vm.socket = io('http://vultr.lisong.hn.cn:3000');
+      vm.socket = io('http://localhost:3000');
       vm.socket.on('connect', () => {
         console.log('连接成功');
       });
