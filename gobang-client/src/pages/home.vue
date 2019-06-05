@@ -258,6 +258,7 @@ $chessWidth:48px;
   height: $chessWidth;
   &.last_step {
     border: 2px solid red;
+    margin: -2px 0 0 -2px;
   }
   .choice_w {
     position: absolute;
