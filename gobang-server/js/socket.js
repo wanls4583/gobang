@@ -11,7 +11,7 @@ module.exports = {
     init(server) {
         var io = require('socket.io')(server);
         this.rooms = [];
-        this.overtime = 10;
+        this.overtime = 30;
         io.on('connection', (socket) => {
             console.log('connection');
             this.creatRoomEvent(socket);
