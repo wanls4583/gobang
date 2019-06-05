@@ -12,9 +12,9 @@
     </div>
     <div class="board_w" @click="_clickBoard" ref="board">
       <div class="cell_w" v-for="n in 14*14"></div>
-      <div class="chess_w" v-for="(chess, index) in chessArr" :style="{top:48*(chess.y-1)-24+'px',left:48*(chess.x-1)-24+'px'}">
-        <div v-if="chess.c=='white'" class="white-chess" :class="{last_step: !chess.local && (index==chessArr.length-1 || index==chessArr.length-2 && chessArr[index+1].local)}"></div>
-        <div v-else class="black-chess" :class="{last_step: !chess.local && (index==chessArr.length-1 || index==chessArr.length-2 && chessArr[index+1].local)}"></div>
+      <div class="chess_w" v-for="(chess, index) in chessArr" :style="{top:48*(chess.y-1)-24+'px',left:48*(chess.x-1)-24+'px'}" :class="{last_step: !chess.local && (index==chessArr.length-1 || index==chessArr.length-2 && chessArr[index+1].local)}">
+        <div v-if="chess.c=='white'" class="white-chess"></div>
+        <div v-else class="black-chess"></div>
         <div v-if="chess.local" class="choice_w">
           <div class="btn cancel_btn" @click.stop="_cancelStep">&#xe603;</div>
           <div class="btn confirm_btn" @click.stop="_confirmStep">&#xe676;</div>
@@ -256,8 +256,8 @@ $chessWidth:48px;
   position: absolute;
   width: $chessWidth;
   height: $chessWidth;
-  .last_step {
-    border: 1px solid red;
+  &.last_step {
+    border: 2px solid red;
   }
   .choice_w {
     position: absolute;
