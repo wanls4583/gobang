@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node cross-env PORT=3001 ./bin/www",
+    "start": "cross-env PORT=3001 node ./bin/www",
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
