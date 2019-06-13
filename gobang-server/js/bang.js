@@ -1,9 +1,10 @@
-module.exports = class Bang{
+module.exports = class Bang {
     constructor(server) {
         this.init();
     }
+    //初始化
     init() {
-       this.creater = [];
+        this.creater = [];
         this.joiner = [];
         for (var i = 0; i < 15; i++) {
             this.creater[i] = [];
@@ -12,17 +13,17 @@ module.exports = class Bang{
                 this.creater[i][j] = false;
                 this.joiner[i][j] = false;
             }
-        } 
+        }
     }
+    //重来
     restart(ifCreater) {
-        if(ifCreater) {
-            this.init();
+        if (ifCreater) {
             this.createrReady = true;
         } else {
-            this.init();
             this.joinerReady = true;
         }
     }
+    //落子
     step(data, ifCreater) {
         if (ifCreater) {
             this.creater[data.y][data.x] = true;
@@ -30,11 +31,18 @@ module.exports = class Bang{
             this.joiner[data.y][data.x] = true;
         }
         var result = this.check(data, ifCreater);
-        if(result) {
+        if (result) {
+            this.init();
             this.createrReady = false;
             this.joinerReady = false;
         }
         return result;
+    }
+    //落子超时
+    overtime() {
+        this.init();
+        this.createrReady = false;
+        this.joinerReady = false;
     }
     //检查是否已经5珠成线
     check(data, ifCreater) {

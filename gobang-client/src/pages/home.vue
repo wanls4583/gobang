@@ -11,6 +11,7 @@
       </div>
     </div>
     <div class="board_w" @click="_clickBoard" ref="board">
+      <div class="waiting" v-if="waiting">等待中...</div>
       <div class="cell_w" v-for="n in 14*14"></div>
       <div class="chess_w" v-for="(chess, index) in chessArr" :style="{top:48*(chess.y-1)-24+'px',left:48*(chess.x-1)-24+'px'}" :class="{last_step: !chess.local && (index==chessArr.length-1 || index==chessArr.length-2 && chessArr[index+1].local)}">
         <div v-if="chess.c=='white'" class="white-chess"></div>
@@ -31,7 +32,6 @@
 </template>
 <script type="text/javascript">
 import Dialog from '@/components/Dialog';
-
 export default {
   components: {
     Dialog
@@ -47,7 +47,8 @@ export default {
       showPop: false,
       result: '',
       time1: 0,
-      time2: 0
+      time2: 0,
+      waiting: true
     }
   },
   created() {
@@ -77,10 +78,12 @@ export default {
       socket.on('start', (data) => {
         console.log('开始');
         this.$toast({
-          content: '开始'
+          content: '开始游戏'
         });
-        this.active = true;
-        this._startTimer(this.color);
+        if(data.color == this.color) {
+          this.active = true;
+          this._startTimer(this.color);
+        }
       });
       //对方落子完成
       socket.on('ready', (data) => {
@@ -90,7 +93,7 @@ export default {
         this._startTimer(this.color);
       });
       //计时器
-      socket.on('time', (data)=>{
+      socket.on('time', (data) => {
         this._startTimer(data.color);
       });
       //落子确认
@@ -122,6 +125,7 @@ export default {
       socket.on('confirm-restart', (data) => {
         this.chessArr = [];
         this.showPop = false;
+        this.waiting = true;
       });
     },
     _clickBoard(e) {
@@ -165,6 +169,7 @@ export default {
     },
     _startTimer(color) {
       clearTimeout(this.timer);
+      this.waiting = false;
       if (color == 'black') {
         this.time1 = this.overtime;
         this.time2 = 0;
@@ -189,6 +194,7 @@ export default {
 </script>
 <style lang="scss">
 $chessWidth:48px;
+
 .home_w {
   height: 100%;
   min-height: 850px;
@@ -199,12 +205,14 @@ $chessWidth:48px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+
   .timer_w {
     width: 14*$chessWidth;
     height: 140px;
     margin-bottom: 30px;
     display: flex;
     justify-content: space-between;
+
     .left_w,
     .right_w {
       display: flex;
@@ -212,6 +220,7 @@ $chessWidth:48px;
       justify-content: space-between;
       align-items: center;
     }
+
     .icon {
       width: 100px;
       height: 100px;
@@ -222,21 +231,25 @@ $chessWidth:48px;
       font-size: 36px;
       color: #fff;
       font-weight: bold;
+
       &.white {
         color: #000;
         background-color: #fff;
       }
     }
+
     .timer {
       line-height: 60px;
       color: #333;
       font-size: 40px;
       font-weight: bold;
+
       &.white {
         color: #fff;
       }
     }
   }
+
   .board_w {
     position: relative;
     display: flex;
@@ -244,22 +257,36 @@ $chessWidth:48px;
     width: 14*$chessWidth;
     height: 14*$chessWidth;
     border: 2px solid #333;
+
     .cell_w {
       width: $chessWidth;
       height: $chessWidth;
       border: 2px solid #333;
       box-sizing: border-box;
     }
+    .waiting {
+      position: absolute;
+      white-space: nowrap;
+      font-size: 60px;
+      top: 50%;
+      left: 50%;
+      color: red;
+      font-weight: bold;
+      transform: translate(-50%,-50%);
+    }
   }
 }
+
 .chess_w {
   position: absolute;
   width: $chessWidth;
   height: $chessWidth;
+
   &.last_step {
     border: 2px solid red;
     margin: -2px 0 0 -2px;
   }
+
   .choice_w {
     position: absolute;
     top: -60px;
@@ -270,6 +297,7 @@ $chessWidth:48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     .btn {
       width: 50px;
       height: 50px;
@@ -280,15 +308,18 @@ $chessWidth:48px;
       line-height: 50px;
       text-align: center;
       background-color: #fff;
+
       &.confirm_btn {
         color: green;
       }
+
       &.cancel_btn {
         color: red;
       }
     }
   }
 }
+
 .white-chess {
   width: $chessWidth;
   height: $chessWidth;
@@ -296,6 +327,7 @@ $chessWidth:48px;
   background: radial-gradient(15px 15px at 15px 15px, #fff, #d8d8d8);
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
+
 .black-chess {
   width: $chessWidth;
   height: $chessWidth;
@@ -303,10 +335,12 @@ $chessWidth:48px;
   background: radial-gradient(10px 10px at 15px 15px, #fff, #333);
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
 }
+
 .win_pop_wrap {
   background-color: #fff;
   border-radius: 8px;
   padding: 40px;
+
   .w_title {
     margin: 0 auto 40px;
     color: #333;
@@ -314,6 +348,7 @@ $chessWidth:48px;
     font-weight: bold;
     text-align: center;
   }
+
   .restart {
     width: 300px;
     height: 60px;

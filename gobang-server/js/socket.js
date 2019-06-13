@@ -1,6 +1,6 @@
 const HAS_EXIST_ROOM = 1;
-const NOT_EXIST_ROOM = '2';
-const LEAVE_ROOM = 3; //对方已经离开房间
+const HAS_JOIN_ROOM = 2;
+const NOT_EXIST_ROOM = 3;
 
 const uuidV1 = require('uuid/v1');
 const Bang = require('./bang.js');
@@ -33,12 +33,12 @@ module.exports = {
                         user: data.user || uuidV1(),
                         socket: socket
                     },
+                    firstColor: 'black', 
                     bang: new Bang()
                 }
                 socket.emit('confirm-create', { color: 'black', overtime: this.overtime });
             } else {
-                socket.emit('error', { code: HAS_EXIST_ROOM });
-                // socket.disconnect();
+                socket.emit('custom-error', { code: HAS_EXIST_ROOM });
             }
         });
     },
@@ -48,19 +48,21 @@ module.exports = {
             console.log('join-room', data);
             var roomid = data.roomid;
             var room = this.rooms[PRE_FIX + roomid];
-            if (room) {
+            if (room && !room.joinner) {
                 room.joinner = {
                     user: data.user || uuidV1(),
                     socket: socket
                 }
-                room.creater.socket.emit('start', {color: 'black'});
+                room.creater.socket.emit('start', { color: 'black' });
+                room.joinner.socket.emit('start', { color: 'black' });
                 room.now = this.rooms[PRE_FIX + roomid].creater;
                 socket.emit('confirm-join', { color: 'white', overtime: this.overtime });
-                room.joinner.socket.emit('time', {color: 'black'});
+                room.joinner.socket.emit('time', { color: 'black' });
                 this.startTimer(room);
+            } else if (room) {
+                socket.emit('custom-error', { code: HAS_JOIN_ROOM });
             } else {
-                socket.emit('error', { code: NOT_EXIST_ROOM });
-                // socket.disconnect();
+                socket.emit('custom-error', { code: NOT_EXIST_ROOM });
             }
         })
     },
@@ -96,15 +98,14 @@ module.exports = {
             var room = this.rooms[PRE_FIX + roomid];
             if (!room) {
                 console.log('disconnect');
-                socket.emit('error', { code: LEAVE_ROOM });
                 socket.disconnect();
                 return;
             }
             socket.emit('confirm-move');
-            if (socket == room.creater.socket && room.now != room.joinner) {
+            if (socket == room.creater.socket) {
                 console.log('emit ready1');
                 room.joinner.socket.emit('ready', data); //通知对方准备落子
-                room.creater.socket.emit('time', {color: 'white'});
+                room.creater.socket.emit('time', { color: 'white' });
                 room.now = room.joinner;
                 if (room.bang.step(data, true)) { //创建者方胜利
                     console.log('emit creater win');
@@ -114,10 +115,10 @@ module.exports = {
                 } else {
                     this.startTimer(room);
                 }
-            } else if (room.now != room.creater) {
+            } else {
                 console.log('emit ready2');
                 room.creater.socket.emit('ready', data); //通知对方准备落子
-                room.joinner.socket.emit('time', {color: 'black'});
+                room.joinner.socket.emit('time', { color: 'black' });
                 room.now = room.creater;
                 this.startTimer(room);
                 if (room.bang.step(data)) { //加入者方胜利
@@ -141,26 +142,38 @@ module.exports = {
             if (socket == room.creater.socket) { //创建者准备就绪
                 room.bang.restart(true);
                 if (room.bang.joinerReady) {
-                    room.now = room.creater;
                     this.startTimer(room);
-                    room.creater.socket.emit('start', {color: 'black'});
-                    room.joinner.socket.emit('time', {color: 'black'});
+                    _start(room);
                 }
             } else { //加入准备就绪
                 room.bang.restart();
                 if (room.bang.createrReady) {
-                    room.now = room.creater;
                     this.startTimer(room);
-                    room.creater.socket.emit('start', {color: 'black'});
-                    room.joinner.socket.emit('time', {color: 'black'});
+                    _start(room);
                 }
             }
         });
+        function _start(room) {
+            if(room.firstColor == 'black') {
+                room.firstColor = 'white';
+                room.now = room.joinner;
+                room.creater.socket.emit('start', { color: 'white' });
+                room.joinner.socket.emit('start', { color: 'white' });
+                room.creater.socket.emit('time', { color: 'white' });
+            } else {
+                room.firstColor = 'black';
+                room.now = room.creater;
+                room.creater.socket.emit('start', { color: 'black' });
+                room.joinner.socket.emit('start', { color: 'black' });
+                room.joinner.socket.emit('time', { color: 'black' });
+            }
+        }
     },
     //设置定时器
     startTimer(room) {
         clearTimeout(room.timer);
         room.timer = setTimeout(() => {
+            room.bang.overtime();
             if (room.now == room.creater) {
                 console.log('emit creater overtime');
                 room.creater.socket.emit('overtime');

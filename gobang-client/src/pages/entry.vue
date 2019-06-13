@@ -25,7 +25,9 @@
 import io from 'socket.io-client';
 import Dialog from '@/components/Dialog';
 const uuidV1 = require('uuid/v1');
-
+const HAS_EXIST_ROOM = 1;
+const HAS_JOIN_ROOM = 2;
+const NOT_EXIST_ROOM = 3;
 export default {
   components: {
     Dialog
@@ -38,15 +40,15 @@ export default {
     }
   },
   created() {
-    
+
   },
-  beforeRouteEnter (to, from, next) {
-    next((vm)=>{
-      if(vm.socket && vm.socket.connected) {
+  beforeRouteEnter(to, from, next) {
+    next((vm) => {
+      if (vm.socket && vm.socket.connected) {
         vm.socket.disconnect();
       }
-      vm.socket = io('http://lisong.hn.cn:3001');
-      // vm.socket = io('http://localhost:3000');
+      // vm.socket = io('http://lisong.hn.cn:3001');
+      vm.socket = io('http://localhost:3000');
       vm.socket.on('connect', () => {
         console.log('连接成功');
       });
@@ -72,6 +74,26 @@ export default {
           content: '加入房间'
         });
         this.$router.push({ name: 'Home', params: { socket: socket, color: data.color, overtime: data.overtime, roomid: this.roomid } });
+      });
+      //错误信息
+      socket.on('custom-error', (data) => {
+        let tip = '';
+        switch (data.code) {
+          case HAS_EXIST_ROOM:
+            tip = '该房间号已存在';
+            break;
+          case HAS_JOIN_ROOM:
+            tip = '房间人已满';
+            break;
+          case NOT_EXIST_ROOM:
+            tip = '不存在该房间';
+            break;
+          default:
+            tip = '未知错误';
+        }
+        this.$toast({
+          content: tip
+        });
       });
     },
     _createRoom() {
@@ -99,12 +121,14 @@ export default {
 </script>
 <style lang="scss">
 $chessWidth:48px;
+
 .entry_w {
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+
   .bg_w {
     position: absolute;
     top: 0;
@@ -113,6 +137,7 @@ $chessWidth:48px;
     height: 100%;
     z-index: -1;
   }
+
   .bg {
     width: 100%;
     height: 100%;
@@ -120,6 +145,7 @@ $chessWidth:48px;
     background-size: cover;
     filter: blur(50px)
   }
+
   .layer {
     position: absolute;
     top: 0;
@@ -129,6 +155,7 @@ $chessWidth:48px;
     background-color: rgba(0, 0, 0, 0.3);
   }
 }
+
 .title {
   margin-bottom: 200px;
   font-size: 80px;
@@ -136,11 +163,13 @@ $chessWidth:48px;
   font-weight: bold;
   text-align: center;
 }
+
 .btn_w {
   position: relative;
   z-index: 2;
   width: 14*$chessWidth;
   margin: 0 auto;
+
   .btn {
     height: 80px;
     margin-top: 60px;
@@ -152,21 +181,25 @@ $chessWidth:48px;
     color: #fff;
   }
 }
+
 .pop_wrap {
   background-color: #fff;
   border-radius: 8px;
   color: #333;
+
   .p_title {
     padding: 30px;
     font-size: 30px;
     line-height: 30px;
     text-align: center;
   }
+
   .input_w {
     width: 450px;
     height: 60px;
     margin: 0 auto;
     border: 1px solid #999;
+
     input {
       border-style: none;
       outline-style: none;
@@ -177,12 +210,14 @@ $chessWidth:48px;
       font-size: 30px;
     }
   }
+
   .btn_r_w {
     display: flex;
     justify-content: space-between;
     border-top: 1px solid #999;
     height: 80px;
     margin-top: 50px;
+
     .btn {
       width: 50%;
       height: 100%;
@@ -190,6 +225,7 @@ $chessWidth:48px;
       font-size: 30px;
       line-height: 80px;
       text-align: center;
+
       &:first-child {
         border-right: 1px solid #999;
       }
