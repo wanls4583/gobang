@@ -4,7 +4,7 @@
       <div class="bg"></div>
       <div class="layer"></div>
     </div>
-    <div class="title">五子棋</div>
+    <div class="title">我是新手<br>（五子棋）</div>
     <div class="btn_w">
       <div class="btn create" @click="_createRoom">创建房间</div>
       <div class="btn join" @click="_joinRoom">加入房间</div>
